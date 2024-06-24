@@ -7,14 +7,14 @@ services:
     env_file:
       - .env
     restart: always
-    command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn --bind 0.0.0.0:8000 trainingmanager.wsgi:application
     volumes:
       - ./:/app
       - ./data/static:/app/static
       - ./data/media:/app/media
       - ./db.sqlite3:/app/db.sqlite3
     ports:
-      - "8001:8000"
+      - "8000"
 
   bot:
     build: ./
@@ -25,5 +25,15 @@ services:
     command: python -m bot.main
     volumes:
       - ./:/app
+    depends_on:
+      - back
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - back

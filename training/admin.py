@@ -76,7 +76,6 @@ def export_trainers_data_to_excel(request, trainer_ids=None, start_date=None, en
     return response
 
 
-
 class PriceInline(admin.TabularInline):
     model = Price
     extra = 1
@@ -103,7 +102,8 @@ class TrainerAdmin(admin.ModelAdmin):
         selected_trainers = queryset.count()
 
         if selected_trainers != total_trainers:
-            self.message_user(request, "Пожалуйста, выберите всех тренеров для экспорта всех данных.", level=messages.ERROR)
+            self.message_user(request, "Пожалуйста, выберите всех тренеров для экспорта всех данных.",
+                              level=messages.ERROR)
             return HttpResponseRedirect(request.get_full_path())
 
         start_date = request.POST.get('start_date')
@@ -112,7 +112,8 @@ class TrainerAdmin(admin.ModelAdmin):
 
     def export_selected_trainers(self, request, queryset):
         if queryset.count() == 0:
-            self.message_user(request, "Пожалуйста, выберите одного или более тренеров для экспорта их данных.", level=messages.ERROR)
+            self.message_user(request, "Пожалуйста, выберите одного или более тренеров для экспорта их данных.",
+                              level=messages.ERROR)
             return HttpResponseRedirect(request.get_full_path())
 
         trainer_ids = queryset.values_list('id', flat=True)
