@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  back:
+    build: ./
+    container_name: site
+    env_file:
+      - .env
+    restart: always
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./:/app
+      - ./data/static:/app/static
+      - ./data/media:/app/media
+      - ./db.sqlite3:/app/db.sqlite3
+    ports:
+      - "8001:8000"
+
+  bot:
+    build: ./
+    container_name: trackerbot
+    env_file:
+      - .env
+    restart: always
+    command: python -m bot.main
+    volumes:
+      - ./:/app
+    depends_on:
+      - back
