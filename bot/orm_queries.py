@@ -42,20 +42,41 @@ async def orm_get_todays_trainings(session: AsyncSession, trainer_id: int, today
     return result.scalars().all()
 
 
-async def orm_add_attendance(session: AsyncSession, data: dict):
-    obj = Attendance(
-        training_id=data['training_id'],
-        attend_count=data['attend_count'],
-        recording_day=data['recording_day'],
-        recording_date=data['recording_date'],
-        created_date=data['created_date'],
-        update_date=data['update_date']
-    )
-    session.add(obj)
+async def orm_add_or_update_attendance(session: AsyncSession, data: dict):
+    training_id = data['training_id']
+    recording_date = data['recording_date']
+
+    # Проверка существования записи о посещаемости
+    query = select(Attendance).where(
+        Attendance.training_id == training_id,
+        Attendance.recording_date == recording_date
+    ).options(joinedload(Attendance.training))
+    result = await session.execute(query)
+    attendance = result.scalars().first()
+
+    if attendance:
+        # Обновление существующей записи
+        attendance.attend_count = data['attend_count']
+        attendance.recording_day = data['recording_day']
+        attendance.update_date = data['update_date']
+    else:
+        # Создание новой записи о посещаемости
+        attendance = Attendance(
+            training_id=training_id,
+            attend_count=data['attend_count'],
+            recording_day=data['recording_day'],
+            recording_date=data['recording_date'],
+            created_date=data['created_date'],
+            update_date=data['update_date']
+        )
+        session.add(attendance)
+
     await session.commit()
+    return attendance
 
 
 async def orm_get_trainer_salary_for_month(session: AsyncSession, trainer_id: int, start_date, end_date):
+    print(f"Calculating salary for Trainer ID: {trainer_id} from {start_date} to {end_date}")
     query = select(
         Attendance.attend_count,
         Price.price_to,
@@ -69,6 +90,7 @@ async def orm_get_trainer_salary_for_month(session: AsyncSession, trainer_id: in
     )
     result = await session.execute(query)
     attendances = result.fetchall()
+    print(f"Attendances found: {attendances}")
 
     salary = 0
     for attendance in attendances:
@@ -77,4 +99,11 @@ async def orm_get_trainer_salary_for_month(session: AsyncSession, trainer_id: in
         else:
             salary += attendance.attend_count * attendance.price_from
 
+    print(f"Calculated salary: {salary}")
     return salary
+
+
+async def orm_get_training_id_by_schedule_id(session: AsyncSession, schedule_id: int):
+    query = select(TrainingSchedule.training_id).where(TrainingSchedule.id == schedule_id)
+    result = await session.execute(query)
+    return result.scalar()

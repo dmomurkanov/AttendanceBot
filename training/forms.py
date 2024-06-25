@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.admin.helpers import ActionForm
 
-from training.models import Price
+from training.models import Price, Trainer
 
 
 class PriceToForm(forms.ModelForm):
@@ -34,14 +34,7 @@ class PriceFromForm(forms.ModelForm):
         return cleaned_data
 
 
-class DateRangeForm(ActionForm):
-    start_date = forms.DateField(
-        required=False,
-        widget=forms.TextInput(attrs={'type': 'date'}),
-        label='С'
-    )
-    end_date = forms.DateField(
-        required=False,
-        widget=forms.TextInput(attrs={'type': 'date'}),
-        label='По'
-    )
+class TrainerActionForm(ActionForm):
+    action = forms.ChoiceField(choices=[], required=True,)
+    start_date = forms.DateField(required=False, label="Начальная дата", widget=forms.TextInput(attrs={'type': 'date'}))
+    end_date = forms.DateField(required=False, label="Конечная дата", widget=forms.TextInput(attrs={'type': 'date'}))

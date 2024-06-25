@@ -5,7 +5,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import timedelta
+from datetime import timedelta, datetime
 from django.utils import timezone
 
 import os
@@ -18,8 +18,7 @@ from .orm_queries import (
     orm_update_trainer_tg_id,
     orm_get_yesterdays_trainings,
     orm_get_todays_trainings,
-    orm_add_attendance,
-    orm_get_trainer_salary_for_month
+    orm_get_trainer_salary_for_month, orm_get_training_id_by_schedule_id, orm_add_or_update_attendance
 )
 from .reply_keyboards import REPLY_REQUEST_CONTACT, REPLY_OPTIONS, CANCEL
 
@@ -161,7 +160,16 @@ async def handle_attendance_count(message: Message, state: FSMContext, session: 
     data = await state.get_data()
     schedule_id = data['training_id']
     participants = int(message.text)
-    date = data.get('date', timezone.now().date())
+    date_str = data.get('date', timezone.now().date().strftime('%Y-%m-%d'))
+
+    # Преобразование строки даты в объект datetime.date
+    date = datetime.strptime(date_str, '%Y-%m-%d').date()
+
+    # Получение training_id с использованием schedule_id
+    training_id = await orm_get_training_id_by_schedule_id(session, schedule_id)
+    if not training_id:
+        await message.answer("Ошибка: занятие не найдено.")
+        return
 
     weekday_map = {
         'mon': DaysOfWeek.mon,
@@ -174,15 +182,15 @@ async def handle_attendance_count(message: Message, state: FSMContext, session: 
     }
     recording_day = weekday_map[date.strftime("%a").lower()]
     attendance_data = {
-        'training_id': schedule_id,
+        'training_id': training_id,
         'attend_count': participants,
         'recording_day': recording_day,
         'recording_date': date,
         'created_date': timezone.now(),
         'update_date': timezone.now()
     }
-    await orm_add_attendance(session, attendance_data)
-    await message.answer('Количество участников успешно записано', reply_markup=REPLY_OPTIONS)
+    attendance = await orm_add_or_update_attendance(session, attendance_data)
+    await message.answer(f'Количество участников успешно записано: {attendance}', reply_markup=REPLY_OPTIONS)
     await state.clear()
 
 
