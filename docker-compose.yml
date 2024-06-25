@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  back:
+  site:
     build: ./
     container_name: site
     env_file:
@@ -10,15 +10,15 @@ services:
     command: gunicorn --bind 0.0.0.0:8000 trainingmanager.wsgi:application
     volumes:
       - ./:/app
-      - ./data/static:/app/static
-      - ./data/media:/app/media
+      - ./static:/app/static
+      - ./media:/app/media
       - ./db.sqlite3:/app/db.sqlite3
     ports:
-      - "8000"
+      - "8000:8000"
 
   bot:
     build: ./
-    container_name: trackerbot
+    container_name: bot
     env_file:
       - .env
     restart: always
@@ -26,7 +26,7 @@ services:
     volumes:
       - ./:/app
     depends_on:
-      - back
+      - site
 
   nginx:
     image: nginx:latest
@@ -35,5 +35,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./static:/app/static
+      - ./media:/app/media
     depends_on:
-      - back
+      - site

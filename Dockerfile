@@ -1,5 +1,8 @@
 FROM python:3.10-slim
 
+ENV TZ=Asia/Bishkek
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
@@ -12,4 +15,5 @@ COPY . /app/
 
 EXPOSE 8000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "trainingmanager.wsgi:application"]
+CMD sh -c "python manage.py migrate && python manage.py collectstatic --no-input && gunicorn --bind 0.0.0.0:8000 trainingmanager.wsgi:application"
+
