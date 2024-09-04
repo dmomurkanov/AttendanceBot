@@ -20,7 +20,7 @@ async def get_yesterday_trainings(conn: aiosqlite.Connection, trainer_id: int, y
     yesterday_weekday = yesterday_date.strftime('%a').lower()
     async with conn.execute(
             '''
-        SELECT ts.* FROM training_training_schedule ts
+        SELECT ts.* FROM training_trainingschedule ts
         JOIN training_training t ON ts.training_id = t.id
         WHERE t.trainer_id = ? AND ts.day_of_week = ?
         ORDER BY ts.start_time
@@ -34,7 +34,7 @@ async def get_today_trainings(conn: aiosqlite.Connection, trainer_id: int, today
     today_weekday = today_date.strftime('%a').lower()
     async with conn.execute(
             '''
-        SELECT ts.* FROM training_training_schedule ts
+        SELECT ts.* FROM training_trainingschedule ts
         JOIN training_training t ON ts.training_id = t.id
         WHERE t.trainer_id = ? AND ts.day_of_week = ?
         ORDER BY ts.start_time
@@ -102,7 +102,15 @@ async def get_trainer_salary_for_month(conn: aiosqlite.Connection, trainer_id: i
 
 async def get_training_id_by_schedule_id(conn: aiosqlite.Connection, schedule_id: int):
     async with conn.execute(
-            'SELECT training_id FROM training_training_schedule WHERE id = ?',
+            'SELECT training_id FROM training_trainingschedule WHERE id = ?',
             (schedule_id,)
+    ) as cursor:
+        return await cursor.fetchone()
+
+
+async def get_training_by_id(conn: aiosqlite.Connection, training_id: int):
+    async with conn.execute(
+        'SELECT name FROM training_training WHERE id = ?',
+        (training_id,)
     ) as cursor:
         return await cursor.fetchone()
