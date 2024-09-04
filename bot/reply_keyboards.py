@@ -1,6 +1,6 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
-CANCEL = ReplyKeyboardMarkup(
+cancel_btn = ReplyKeyboardMarkup(
     keyboard=[
         [
             KeyboardButton(text='Отмена')
@@ -9,17 +9,16 @@ CANCEL = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-REPLY_REQUEST_CONTACT = ReplyKeyboardMarkup(
+request_contact_btn = ReplyKeyboardMarkup(
     keyboard=[
         [
             KeyboardButton(text='Отправить номер телефона', request_contact=True)
         ]
     ],
     resize_keyboard=True,
-    one_time_keyboard=True
 )
 
-REPLY_OPTIONS = ReplyKeyboardMarkup(
+options_btn = ReplyKeyboardMarkup(
     keyboard=[
         [
             KeyboardButton(text='Занятия на сегодня'),
