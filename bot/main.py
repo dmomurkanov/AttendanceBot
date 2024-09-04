@@ -23,7 +23,8 @@ from bot.sql_queries import (
     get_today_trainings,
     add_or_update_attendance,
     get_trainer_salary_for_month,
-    get_training_id_by_schedule_id
+    get_training_id_by_schedule_id,
+    get_training_by_id
 )
 
 load_dotenv()
@@ -99,14 +100,15 @@ async def send_yesterdays_trainings(message: Message, state: FSMContext):
     else:
         inline_keyboard = InlineKeyboardBuilder()
         for schedule in schedules:
-            button_text = f"{schedule['training_name']} с {schedule['start_time']} до {schedule['end_time']}"
+            training = await get_training_by_id(conn, schedule['training_id'])
+            button_text = f"{training['name']} с {schedule['start_time'][:-3]} до {schedule['end_time'][:-3]}"
             inline_keyboard.add(InlineKeyboardButton(text=button_text, callback_data=f"yesattendance_{schedule['id']}"))
         inline_keyboard.adjust(1)
         await message.answer("Ваши вчерашние занятия", reply_markup=inline_keyboard.as_markup())
 
 
 @dp.message(StateFilter('*'), F.text.casefold() == "занятия на сегодня")
-async def send_todays_trainings(message: Message, state: FSMContext):
+async def send_today_trainings(message: Message, state: FSMContext):
     await state.clear()
 
     conn = dp['dbconn']
@@ -125,7 +127,8 @@ async def send_todays_trainings(message: Message, state: FSMContext):
     else:
         inline_keyboard = InlineKeyboardBuilder()
         for schedule in schedules:
-            button_text = f"{schedule['training_name']} с {schedule['start_time']} до {schedule['end_time']}"
+            training = await get_training_by_id(conn, schedule['training_id'])
+            button_text = f"{training['name']} с {schedule['start_time'][:-3]} до {schedule['end_time'][:-3]}"
             inline_keyboard.add(InlineKeyboardButton(text=button_text, callback_data=f"todattendance_{schedule['id']}"))
         inline_keyboard.adjust(1)
         await message.answer("Ваши занятия на сегодня", reply_markup=inline_keyboard.as_markup())
