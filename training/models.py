@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -93,6 +95,12 @@ class Attendance(models.Model):
 
     def __str__(self):
         return f'На занятие {self.training.name} пришло {self.attend_count} чел. Дата {self.recording_date}'
+
+    def recording_datetime(self, training_schedule):
+        if training_schedule:
+            start_time = training_schedule.start_time
+            return datetime.combine(self.recording_date, start_time).strftime("%Y-%m-%d %H:%M")
+        return str(self.recording_date)
 
     class Meta:
         verbose_name = 'Посещаемость'
