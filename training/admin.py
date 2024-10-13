@@ -5,6 +5,12 @@ from datetime import datetime, timedelta
 from io import BytesIO
 from django.db.models import Sum, F, Case, When, IntegerField
 from .models import Trainer, Training, Attendance, Price, TrainingSchedule, DAYS_OF_WEEK
+from rangefilter.filters import (
+    DateRangeFilterBuilder,
+    DateTimeRangeFilterBuilder,
+    NumericRangeFilterBuilder,
+    DateRangeQuickSelectListFilterBuilder,
+)
 
 
 def download_salary_report(modeladmin, request, queryset):
@@ -176,10 +182,24 @@ class TrainerAdmin(admin.ModelAdmin):
 class TrainingAdmin(admin.ModelAdmin):
     list_display = ('name', 'trainer', 'start_date', 'end_date')
     search_fields = ('name', 'trainer__first_name', 'trainer__last_name')
-    list_filter = ('start_date', 'end_date')
+    list_filter = (
+            ("start_date", DateRangeFilterBuilder()),
+            (
+                "start_date",
+                DateTimeRangeFilterBuilder(
+                    title="Custom title",
+                    default_start=datetime(2020, 1, 1),
+                    default_end=datetime(2030, 1, 1),
+                ),
+            ),
+#             ("num_value", NumericRangeFilterBuilder()),
+            ("start_date", DateRangeQuickSelectListFilterBuilder()),  # Range + QuickSelect Filter
+        )
     ordering = ('start_date',)
     inlines = [TrainingScheduleInline, PriceInline]
     actions = [download_salary_report]
+
+
 
 @admin.register(Attendance)
 class AttendanceAdmin(admin.ModelAdmin):
